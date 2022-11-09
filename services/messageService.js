@@ -1,5 +1,5 @@
 const DATABASE_URL =
-  'https://aec-420-160-lg-default-rtdb.firebaseio.com/discussion';
+  'https://aec-420-160-lg-default-rtdb.firebaseio.com/conversations';
 
 const getMessages = async (fromUserId, toUserId) => {
   var response = await fetch(`${DATABASE_URL}/${fromUserId}/${toUserId}.json`, {
