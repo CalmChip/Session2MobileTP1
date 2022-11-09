@@ -38,7 +38,7 @@ const styles = StyleSheet.create({
     margin: 12,
     borderRadius: 6,
   },
-
+  
   logoApp: {
     margin: 20,
     width: 150,
