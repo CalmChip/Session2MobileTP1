@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import {TextInput, Stack, Button } from '@react-native-material/core';
+import {TextInput, Stack } from '@react-native-material/core';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import {View, StyleSheet, Text} from "react-native";
-import {isAuthenticated, signUp,updateProfile,getCommonError} from '../services/userServices';
+import {View, StyleSheet, Text, TouchableOpacity} from "react-native";
+import {isAuthenticated, signUp, updateProfile, getCommonError} from '../services/userServices';
+import { db } from "../database/firebase";
+import { addDoc, collection } from "firebase/firestore";
+
 
 export default function Register({navigation}) {
   const [firstName, setFirstName] = useState();
@@ -22,11 +25,41 @@ export default function Register({navigation}) {
     })();
   }, []);
 
+
+  const ajouterUser = () => {
+    if (password !== confirmation) {
+      Alert.alert("Erreur", "Le mots de passe ne sont pas identiques", [
+        {
+          text: "Ok",
+          style: "ok",
+        },
+      ]);
+    } else {
+      addUser();
+      createAccount(email, password);
+      navigation.navigate("Login");
+    }
+  };
+
+  const addUser = async () => {
+    const newUser = {
+      nom: lastName,
+      _id: email,
+      password: password,
+    };
+    try {
+      const docRef = await addDoc(collection(db, "usagers"), newUser);
+      newUser.id = docRef.id;
+    } catch (e) {
+      console.error("Error adding document: ", e);
+    } 
+};
+
+
   const createAccount = async () => {
     if (validateName() && validateEmail() && validatePassword()) {
       setErrorMessage('');
       var response = await signUp(email, password);
-
       if (response.success) {
         const displayName = `${firstName} ${lastName}`;
         await updateProfile(displayName, response.idToken);
@@ -40,12 +73,12 @@ export default function Register({navigation}) {
 
   const validateName = () => {
     if (!firstName || firstName.length < 2) {
-      setErrorMessage('Le prénom doit contenir au moins deux caractères.');
+      setErrorMessage('Le prénom doit comporter au moins deux caractères.');
       return false;
     }
 
     if (!lastName || lastName.length < 2) {
-      setErrorMessage('Le nom doit contenir au moins deux caractères.');
+      setErrorMessage('Le nom doit comporter au moins deux caractères.');
       return false;
     }
     return true;
@@ -64,12 +97,12 @@ export default function Register({navigation}) {
       setErrorMessage('Les mots de passe ne sont pas identiques.');
       return false;
     }
-
     if (!password || password.length < 6) {
-      setErrorMessage('Le mot de passe est trop court.');
+      setErrorMessage('Le mot de passe doit comporter au moins six caractères.');
       return false;
-    }
-    return true;
+    }else {
+      return true;
+    }; 
   };
 
   return (
@@ -127,12 +160,10 @@ export default function Register({navigation}) {
           <MaterialCommunityIcons name="cellphone" color="blue"{...props} />
         )}
       />
-  
       <View style={styles.btn}>
-        <Button style={styles.button}  
-        title="Register"
-        onPress={() => createAccount()}
-        />
+       <TouchableOpacity style={styles.button} onPress={ajouterUser} >
+          <Text style={styles.register}>S'enregistrer</Text>
+        </TouchableOpacity>
       </View>
     </View>
     </Stack>
@@ -141,12 +172,11 @@ export default function Register({navigation}) {
 
 const styles = StyleSheet.create({
   container: { 
-    margin: 8,
-  },
-
+    margin: 14,
+   },
 
   button: {
-    width: 200,
+    width: 150,
     height: 50,
     borderWidth: 1,
     borderRadius: 10,
@@ -154,8 +184,6 @@ const styles = StyleSheet.create({
     backgroundColor: "blue",
     justifyContent: "center",
     alignItems: "center",
-    color: "#fff",
-    
   },
 
   btn: {
@@ -166,11 +194,25 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
 
+  register:{
+    fontWeight: "bold",
+    fontSize: 20,
+    textAlign: "center",
+    color: "#fff",
+    borderRadius: 19,
+    borderColor: "blue",
+    backgroundColor: "blue",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
   errorRegister:{
-    margin:10,
+    margin: 10,
     textAlign: 'center',
     fontWeight: "bold",
     fontSize: 20,
-    
+    color: "#fff",
   }
+
 });
+
